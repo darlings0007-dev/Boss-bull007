@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BOSS BULL007 | AI Trading Desk</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0f19">
+  <link rel="icon" href="https://img.icons8.com/color/96/bull.png" type="image/png">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .terminal-card {
+      background: linear-gradient(135deg, #131d31 0%, #17243c 100%);
+      border: 1px solid #243553;
+      border-radius: 12px;
+    }
+    .glow-green { text-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+    .glow-red { text-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+    .tab-active {
+      border-bottom: 2px solid #3b82f6;
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    /* Hide scrollbars for clean mobile feel */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between select-none">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-[#0f172a] border-b border-[#1e293b] px-4 py-3 sticky top-0 z-50 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="https://img.icons8.com/color/96/bull.png" alt="Bull" class="w-8 h-8">
+      <div>
+        <h1 class="text-lg font-bold tracking-wider text-white flex items-center gap-2">
+          BOSS BULL007
+          <span class="text-xs bg-indigo-900/60 text-indigo-400 border border-indigo-700/50 px-2 py-0.5 rounded-full font-mono">v1.0 Vercel</span>
+        </h1>
+        <p class="text-[10px] text-gray-400">Institutional AI Trading Desk · NSE / BSE</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4 text-right">
+      <div>
+        <div class="text-[10px] text-gray-400 uppercase tracking-wider">Simulated Capital</div>
+        <div id="virtualCapital" class="text-sm md:text-base font-mono font-bold text-white">₹1,00,000.00</div>
+      </div>
+      <div class="hidden sm:block">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/60">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Desk 24/7 Live
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-[#111c30] border-b border-[#1e293b] px-2 overflow-x-auto whitespace-nowrap flex gap-4 md:gap-8 text-xs md:text-sm">
+    <button onclick="switchTab('boss')" id="tab-boss" class="py-3 px-2 tab-active transition-colors flex items-center gap-1.5">
+      <span>👔</span> Boss HQ
+    </button>
+    <button onclick="switchTab('researcher')" id="tab-researcher" class="py-3 px-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1.5">
+      <span>🔎</span> Market Researcher
+    </button>
+    <button onclick="switchTab('news')" id="tab-news" class="py-3 px-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1.5">
+      <span>📰</span> Geopolitics & News
+    </button>
+    <button onclick="switchTab('strategist')" id="tab-strategist" class="py-3 px-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1.5">
+      <span>📋</span> Strategist (1:2 R:R)
+    </button>
+    <button onclick="switchTab('risk')" id="tab-risk" class="py-3 px-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1.5">
+      <span>🛡️</span> Risk Manager
+    </button>
+    <button onclick="switchTab('ledger')" id="tab-ledger" class="py-3 px-2 text-gray-400 hover:text-gray-200 transition-colors flex items-center gap-1.5">
+      <span>📈</span> Paper Ledger (<span id="openCount">0</span>)
+    </button>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- 1. BOSS HQ SECTION -->
+    <section id="sec-boss" class="space-y-6">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div class="terminal-card p-3.5">
+          <div class="flex items-center justify-between text-xs text-blue-400 font-semibold mb-1">
+            <span>🔎 RESEARCHER</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="text-sm font-bold text-white">NSE Scanner</div>
+          <div class="text-[11px] text-gray-400 mt-1">EMAs 9/21 · VWAP · RSI</div>
+        </div>
+        <div class="terminal-card p-3.5">
+          <div class="flex items-center justify-between text-xs text-amber-400 font-semibold mb-1">
+            <span>📰 GEOPOLITICS</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="text-sm font-bold text-white">Macro Intelligence</div>
+          <div class="text-[11px] text-gray-400 mt-1">Crude $84 · DXY 103.8</div>
+        </div>
+        <div class="terminal-card p-3.5">
+          <div class="flex items-center justify-between text-xs text-emerald-400 font-semibold mb-1">
+            <span>📋 STRATEGIST</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="text-sm font-bold text-white">Trade Architect</div>
+          <div class="text-[11px] text-gray-400 mt-1">Min 1:2 R:R Guarantee</div>
+        </div>
+        <div class="terminal-card p-3.5">
+          <div class="flex items-center justify-between text-xs text-rose-400 font-semibold mb-1">
+            <span>🛡️ RISK MANAGER</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="text-sm font-bold text-white">Veto Active</div>
+          <div class="text-[11px] text-gray-400 mt-1">Max 1% Account Risk</div>
+        </div>
+        <div class="terminal-card p-3.5 col-span-2 sm:col-span-1">
+          <div class="flex items-center justify-between text-xs text-purple-400 font-semibold mb-1">
+            <span>💻 CODER</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          </div>
+          <div class="text-sm font-bold text-white">Cloud Engine</div>
+          <div class="text-[11px] text-gray-400 mt-1">Vercel PWA + Streamlit</div>
+        </div>
+      </div>
+
+      <!-- Asset Quick Selector -->
+      <div class="terminal-card p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <span class="text-sm text-gray-400">Selected Ticker:</span>
+          <select id="assetSelect" onchange="onAssetChange()" class="bg-[#0b0f19] border border-[#2a3b5c] text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-blue-500 font-mono w-full md:w-64">
+            <option value="RELIANCE">RELIANCE (Reliance Ind. - NSE)</option>
+            <option value="HDFCBANK">HDFCBANK (HDFC Bank - NSE)</option>
+            <option value="TCS">TCS (Tata Consultancy - NSE)</option>
+            <option value="NIFTY50">NIFTY 50 INDEX</option>
+            <option value="TATAMOTORS">TATAMOTORS (Tata Motors)</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
+          <div>
+            <div class="text-[11px] text-gray-400">Spot Price</div>
+            <div id="spotPrice" class="text-base font-mono font-bold text-white">₹2,845.50</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-gray-400">Day Change</div>
+            <div id="spotChange" class="text-base font-mono font-bold text-white">+1.24%</div>
+          </div>
+          <div>
+            <div class="text-[11px] text-gray-400">Regime</div>
+            <div class="text-xs px-2.5 py-1 rounded bg-blue-900/40 text-blue-300 font-semibold border border-blue-700/50">Bullish Trend</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Desk Activity Log -->
+      <div class="terminal-card p-4">
+        <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span>🗣️</span> Live Desk Coordination Log
+        </h3>
+        <div id="deskLogs" class="space-y-2 text-xs font-mono max-h-48 overflow-y-auto pr-2">
+          <div class="text-gray-400"><span class="text-purple-400">[09:00:00] 👔 Boss:</span> Desk morning briefing started. Systems nominal.</div>
+          <div class="text-gray-400"><span class="text-amber-400">[09:05:00] 📰 News Analyst:</span> Middle East geopolitical tensions supporting Brent Crude at $84. Bullish domestic upstream.</div>
+          <div class="text-gray-400"><span class="text-blue-400">[09:10:00] 🔎 Researcher:</span> RELIANCE moving above 9 EMA. RSI at 58.6 (healthy bullish momentum).</div>
+          <div class="text-gray-400"><span class="text-rose-400">[09:14:00] 🛡️ Risk Manager:</span> Capital protection threshold set to ₹1,000 max risk per setup.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. RESEARCHER (CHART) SECTION -->
+    <section id="sec-researcher" class="hidden space-y-6">
+      <div class="terminal-card p-4">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 border-b border-[#243553] gap-2">
+          <div>
+            <h2 id="chartTitle" class="text-base font-bold text-white">RELIANCE — Technical Chart & Indicators</h2>
+            <p class="text-xs text-gray-400">Candlestick simulation with EMA 9 (Blue) and EMA 21 (Yellow)</p>
+          </div>
+          <div class="flex gap-2">
+            <span class="text-xs px-2.5 py-1 rounded bg-blue-950 text-blue-400 border border-blue-800">EMA 9: ₹2,832</span>
+            <span class="text-xs px-2.5 py-1 rounded bg-amber-950 text-amber-400 border border-amber-800">EMA 21: ₹2,810</span>
+          </div>
+        </div>
+        <div class="mt-4 h-72 sm:h-96 w-full">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GEOPOLITICS & NEWS SECTION -->
+    <section id="sec-news" class="hidden space-y-4">
+      <div class="terminal-card p-4">
+        <h2 class="text-base font-bold text-amber-400 mb-1 flex items-center gap-2">
+          <span>📰</span> Geopolitics & Macro Intelligence Wire
+        </h2>
+        <p class="text-xs text-gray-400 mb-4">Translating global geopolitical tensions, energy flows, and institutional flows into Indian stock signals.</p>
+
+        <div class="space-y-3">
+          <div class="p-3 bg-[#0d1527] rounded-lg border border-[#1f2d48]">
+            <div class="flex items-center justify-between text-xs text-amber-400 mb-1">
+              <span class="font-bold">CRUDE OIL & RED SEA DISRUPTION</span>
+              <span class="text-rose-400 font-mono">Impact: -0.35</span>
+            </div>
+            <p class="text-sm text-gray-200">Tanker rerouting around Cape of Good Hope adds freight premium. High crude compresses Indian OMC margins (IOC, BPCL); benefits ONGC.</p>
+            <div class="mt-2 text-[11px] text-gray-400">Sector Bias: <span class="text-rose-400 font-semibold">Underweight OMCs & Paints</span> | <span class="text-emerald-400 font-semibold">Overweight Upstream Oil</span></div>
+          </div>
+
+          <div class="p-3 bg-[#0d1527] rounded-lg border border-[#1f2d48]">
+            <div class="flex items-center justify-between text-xs text-blue-400 mb-1">
+              <span class="font-bold">DOMESTIC DEFENSE MODERNIZATION</span>
+              <span class="text-emerald-400 font-mono">Impact: +0.82</span>
+            </div>
+            <p class="text-sm text-gray-200">Ministry of Defence advances indigenous procurement worth ₹45,000 Cr. Long-term multi-year backlog visible.</p>
+            <div class="mt-2 text-[11px] text-gray-400">Sector Bias: <span class="text-emerald-400 font-semibold">Strong Bullish on Aerospace & Defense</span></div>
+          </div>
+
+          <div class="p-3 bg-[#0d1527] rounded-lg border border-[#1f2d48]">
+            <div class="text-purple-400 mb-1">
+              <span class="font-bold">FII / DII INSTITUTIONAL LIQUIDITY</span>
+              <span class="text-emerald-400 font-mono">Impact: +0.65</span>
+            </div>
+            <p class="text-sm text-gray-200">DII net buying offset foreign selling with ₹3,200 Cr net inflows. Banking heavyweights absorbing supply.</p>
+            <div class="mt-2 text-[11px] text-gray-400">Sector Bias: <span class="text-emerald-400 font-semibold">Bullish on Private Banking (HDFCBANK, ICICIBANK)</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. STRATEGIST SECTION -->
+    <section id="sec-strategist" class="hidden space-y-4">
+      <div class="terminal-card p-4">
+        <h2 class="text-base font-bold text-emerald-400 mb-1 flex items-center gap-2">
+          <span>📋</span> Strategist Trade Setup Generator
+        </h2>
+        <p class="text-xs text-gray-400 mb-4">Every setup must mathematically satisfy a minimum 1:2 Risk-to-Reward ratio.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Trade Direction</label>
+            <select id="tradeDirection" onchange="calculateRR()" class="w-full bg-[#0b0f19] border border-[#2a3b5c] text-white text-sm rounded-lg p-2.5">
+              <option value="LONG">LONG (Buy)</option>
+              <option value="SHORT">SHORT (Sell)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Trigger Entry Price (₹)</label>
+            <input type="number" id="tradeEntry" value="2845.50" step="0.5" oninput="calculateRR()" class="w-full bg-[#0b0f19] border border-[#2a3b5c] text-white text-sm rounded-lg p-2.5 font-mono">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Invalidation Stop-Loss (₹)</label>
+            <input type="number" id="tradeSL" value="2820.00" step="0.5" oninput="calculateRR()" class="w-full bg-[#0b0f19] border border-[#2a3b5c] text-white text-sm rounded-lg p-2.5 font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Profit Target (₹)</label>
+            <input type="number" id="tradeTarget" value="2896.50" step="0.5" oninput="calculateRR()" class="w-full bg-[#0b0f19] border border-[#2a3b5c] text-white text-sm rounded-lg p-2.5 font-mono">
+          </div>
+          <div class="flex items-center justify-between p-3 bg-[#0d1527] rounded-lg border border-[#2a3b5c]">
+            <div>
+              <div class="text-[11px] text-gray-400">Risk vs Reward</div>
+              <div id="rrValue" class="text-base font-mono font-bold text-emerald-400">1 : 2.00</div>
+            </div>
+            <div id="rrBadge" class="text-xs px-2.5 py-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold">
+              Eligible (>= 1:2)
+            </div>
+          </div>
+        </div>
+
+        <button onclick="submitToRisk()" class="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-2.5 px-4 rounded-lg text-sm transition-all shadow-lg">
+          Forward Setup to Risk Manager for Veto/Approval ➔
+        </button>
+      </div>
+    </section>
+
+    <!-- 5. RISK MANAGER SECTION -->
+    <section id="sec-risk" class="hidden space-y-4">
+      <div class="terminal-card p-4">
+        <h2 class="text-base font-bold text-rose-400 mb-1 flex items-center gap-2">
+          <span>🛡️</span> Risk Manager — Gatekeeper & Sizing Engine
+        </h2>
+        <p class="text-xs text-gray-400 mb-4">Capital preservation is priority #1. Enforcing strict 1% account risk per trade.</p>
+
+        <div id="riskReviewCard" class="p-4 bg-[#0d1527] rounded-lg border border-[#243553] space-y-3">
+          <div class="text-sm font-semibold text-gray-300">Pending Setup Assessment:</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+            <div class="p-2 bg-[#131d31] rounded">
+              <span class="text-gray-400">Risk Limit (1%):</span><br>
+              <strong id="riskLimitText" class="text-white">₹1,000.00</strong>
+            </div>
+            <div class="p-2 bg-[#131d31] rounded">
+              <span class="text-gray-400">Stop Distance:</span><br>
+              <strong id="riskStopDist" class="text-rose-400">₹25.50</strong>
+            </div>
+            <div class="p-2 bg-[#131d31] rounded">
+              <span class="text-gray-400">Allowed Position:</span><br>
+              <strong id="riskShares" class="text-emerald-400">39 Shares</strong>
+            </div>
+            <div class="p-2 bg-[#131d31] rounded">
+              <span class="text-gray-400">Capital Sized:</span><br>
+              <strong id="riskTotalCap" class="text-white">₹1,10,974.50</strong>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between">
+            <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
+              <span>✅</span> Risk rules compliant (No single loss exceeds 1% of equity).
+            </span>
+            <button onclick="approveTrade()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2 px-5 rounded-lg transition-colors">
+              Approve & Execute to Ledger
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PAPER LEDGER SECTION -->
+    <section id="sec-ledger" class="hidden space-y-4">
+      <div class="terminal-card p-4">
+        <div class="flex items-center justify-between pb-3 border-b border-[#243553]">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📈</span> Paper Trading Execution Ledger
+            </h2>
+            <p class="text-xs text-gray-400">Real-time simulated P&L tracking without real money exposure.</p>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-gray-400">Realized P&L</div>
+            <div id="realizedPnl" class="text-sm font-mono font-bold text-emerald-400">+₹0.00</div>
+          </div>
+        </div>
+
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-[#0b0f19] text-gray-400 uppercase border-b border-[#1e293b]">
+              <tr>
+                <th class="p-2.5">Asset</th>
+                <th class="p-2.5">Side</th>
+                <th class="p-2.5">Qty</th>
+                <th class="p-2.5">Entry</th>
+                <th class="p-2.5">SL</th>
+                <th class="p-2.5">Target</th>
+                <th class="p-2.5">Status</th>
+                <th class="p-2.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tradeTableBody" class="divide-y divide-[#1e293b]">
+              <tr>
+                <td colspan="8" class="p-4 text-center text-gray-500 font-sans">No paper trades executed yet. Create and approve a setup in the tabs above!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#0f172a] border-t border-[#1e293b] px-4 py-3 text-center text-[11px] text-gray-500">
+    🔒 BOSS BULL007 Institutional AI Desk · Operating on Simulated Capital · Never Enter Broker Passwords or OTPs
+  </footer>
+
+  <!-- CORE SCRIPT LOGIC -->
+  <script>
+    let capital = 100000.0;
+    let realizedPnl = 0.0;
+    let trades = [];
+    let currentAsset = "RELIANCE";
+
+    const assetData = {
+      "RELIANCE": { price: 2845.50, change: "+1.24%", sl: 2820.00, target: 2896.50 },
+      "HDFCBANK": { price: 1512.20, change: "+0.85%", sl: 1495.00, target: 1546.60 },
+      "TCS": { price: 3980.00, change: "-0.40%", sl: 3940.00, target: 4060.00 },
+      "NIFTY50": { price: 24780.00, change: "+0.55%", sl: 24650.00, target: 25040.00 },
+      "TATAMOTORS": { price: 920.40, change: "+2.10%", sl: 905.00, target: 951.20 }
+    };
+
+    function switchTab(tabId) {
+      ['boss', 'researcher', 'news', 'strategist', 'risk', 'ledger'].forEach(t => {
+        document.getElementById(`sec-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).classList.remove('tab-active');
+        document.getElementById(`tab-${t}`).classList.add('text-gray-400');
+      });
+      document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+      document.getElementById(`tab-${tabId}`).classList.add('tab-active');
+      document.getElementById(`tab-${tabId}`).classList.remove('text-gray-400');
+
+      if (tabId === 'researcher') {
+        renderChart();
+      }
+    }
+
+    function onAssetChange() {
+      currentAsset = document.getElementById('assetSelect').value;
+      const data = assetData[currentAsset];
+      document.getElementById('spotPrice').innerText = '₹' + data.price.toFixed(2);
+      document.getElementById('spotChange').innerText = data.change;
+      document.getElementById('tradeEntry').value = data.price.toFixed(2);
+      document.getElementById('tradeSL').value = data.sl.toFixed(2);
+      document.getElementById('tradeTarget').value = data.target.toFixed(2);
+      calculateRR();
+      renderChart();
+    }
+
+    function calculateRR() {
+      const entry = parseFloat(document.getElementById('tradeEntry').value) || 0;
+      const sl = parseFloat(document.getElementById('tradeSL').value) || 0;
+      const target = parseFloat(document.getElementById('tradeTarget').value) || 0;
+
+      const risk = Math.abs(entry - sl);
+      const reward = Math.abs(target - entry);
+      const rr = reward / (risk || 0.0001);
+
+      document.getElementById('rrValue').innerText = `1 : ${rr.toFixed(2)}`;
+      const badge = document.getElementById('rrBadge');
+      if (rr >= 1.95) {
+        badge.className = "text-xs px-2.5 py-1 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-semibold";
+        badge.innerText = "Eligible (>= 1:2)";
+      } else {
+        badge.className = "text-xs px-2.5 py-1 rounded bg-rose-950 text-rose-400 border border-rose-800 font-semibold";
+        badge.innerText = "Inadequate (< 1:2)";
+      }
+
+      // Update Risk Assessment values
+      const maxRiskCash = capital * 0.01;
+      const shares = Math.floor(maxRiskCash / (risk || 1));
+      document.getElementById('riskStopDist').innerText = '₹' + risk.toFixed(2);
+      document.getElementById('riskShares').innerText = shares + ' Shares';
+      document.getElementById('riskTotalCap').innerText = '₹' + (shares * entry).toLocaleString('en-IN', {maximumFractionDigits: 2});
+    }
+
+    function submitToRisk() {
+      switchTab('risk');
+    }
+
+    function approveTrade() {
+      const entry = parseFloat(document.getElementById('tradeEntry').value);
+      const sl = parseFloat(document.getElementById('tradeSL').value);
+      const target = parseFloat(document.getElementById('tradeTarget').value);
+      const direction = document.getElementById('tradeDirection').value;
+      const risk = Math.abs(entry - sl);
+      const shares = Math.floor((capital * 0.01) / (risk || 1));
+
+      if (shares <= 0) {
+        alert("Position size calculated is 0 shares. Adjust stop distance.");
+        return;
+      }
+
+      const trade = {
+        id: Date.now(),
+        asset: currentAsset,
+        direction: direction,
+        shares: shares,
+        entry: entry,
+        sl: sl,
+        target: target,
+        status: 'OPEN'
+      };
+      trades.push(trade);
+      renderLedger();
+      switchTab('ledger');
+    }
+
+    function closeTrade(id, isTarget) {
+      const t = trades.find(item => item.id === id);
+      if (!t || t.status !== 'OPEN') return;
+
+      const pnl = isTarget 
+        ? Math.abs(t.target - t.entry) * t.shares 
+        : -Math.abs(t.sl - t.entry) * t.shares;
+
+      t.status = isTarget ? 'TARGET HIT' : 'STOPPED OUT';
+      t.pnl = pnl;
+      realizedPnl += pnl;
+      capital += pnl;
+
+      document.getElementById('virtualCapital').innerText = '₹' + capital.toLocaleString('en-IN', {maximumFractionDigits: 2});
+      document.getElementById('realizedPnl').innerText = (realizedPnl >= 0 ? '+₹' : '-₹') + Math.abs(realizedPnl).toLocaleString('en-IN', {maximumFractionDigits: 2});
+      document.getElementById('realizedPnl').className = `text-sm font-mono font-bold ${realizedPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      renderLedger();
+    }
+
+    function renderLedger() {
+      const tbody = document.getElementById('tradeTableBody');
+      const openTrades = trades.filter(t => t.status === 'OPEN');
+      document.getElementById('openCount').innerText = openTrades.length;
+
+      if (trades.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500 font-sans">No paper trades executed yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = trades.map(t => `
+        <tr class="hover:bg-[#131d31]">
+          <td class="p-2.5 font-bold text-white">${t.asset}</td>
+          <td class="p-2.5"><span class="${t.direction === 'LONG' ? 'text-emerald-400' : 'text-rose-400'}">${t.direction}</span></td>
+          <td class="p-2.5">${t.shares}</td>
+          <td class="p-2.5">₹${t.entry.toFixed(2)}</td>
+          <td class="p-2.5 text-rose-400">₹${t.sl.toFixed(2)}</td>
+          <td class="p-2.5 text-emerald-400">₹${t.target.toFixed(2)}</td>
+          <td class="p-2.5">
+            <span class="px-2 py-0.5 rounded text-[10px] ${t.status === 'OPEN' ? 'bg-blue-950 text-blue-400 border border-blue-800' : t.status === 'TARGET HIT' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'}">${t.status}</span>
+          </td>
+          <td class="p-2.5 text-right">
+            ${t.status === 'OPEN' ? `
+              <button onclick="closeTrade(${t.id}, true)" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-300 px-2 py-1 rounded text-[10px] mr-1">Target</button>
+              <button onclick="closeTrade(${t.id}, false)" class="bg-rose-900/60 hover:bg-rose-800 text-rose-300 px-2 py-1 rounded text-[10px]">Stop</button>
+            ` : `<span class="${(t.pnl||0) >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${(t.pnl||0) >= 0 ? '+' : ''}₹${(t.pnl||0).toFixed(2)}</span>`}
+          </td>
+        </tr>
+      `).reverse().join('');
+    }
+
+    let chartInstance = null;
+    function renderChart() {
+      const ctx = document.getElementById('priceChart');
+      if (!ctx) return;
+      if (chartInstance) chartInstance.destroy();
+
+      const base = assetData[currentAsset].price;
+      const labels = Array.from({length: 25}, (_, i) => `T-${25-i}`);
+      const prices = [];
+      const ema9 = [];
+      const ema21 = [];
+      
+      let p = base * 0.96;
+      for (let i = 0; i < 25; i++) {
+        p += (Math.random() - 0.47) * (base * 0.008);
+        prices.push(p);
+        ema9.push(p * 0.995);
+        ema21.push(p * 0.988);
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: `${currentAsset} Price`,
+              data: prices,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.05)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.2
+            },
+            {
+              label: 'EMA 9',
+              data: ema9,
+              borderColor: '#38bdf8',
+              borderWidth: 1.5,
+              borderDash: [4, 4],
+              pointRadius: 0
+            },
+            {
+              label: 'EMA 21',
+              data: ema21,
+              borderColor: '#fbbf24',
+              borderWidth: 1.5,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { family: 'monospace', size: 11 } } }
+          },
+          scales: {
+            x: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } },
+            y: { grid: { color: '#1e293b' }, ticks: { color: '#64748b' } }
+          }
+        }
+      });
+    }
+
+    // Init
+    calculateRR();
+  </script>
+</body>
+</html>
